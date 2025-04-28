@@ -1,0 +1,905 @@
+html,
+    body,
+    #container {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    .amap-marker-label {
+        border: none;
+        background-color: transparent;
+    }
+    #info {
+      
+        background-color: white;
+        padding: 10px;
+        border-radius: 4px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+  
+    #directionButton:hover {
+        background-color: #f0f0f0;
+    }
+    #spacingControl {
+      
+        background-color: white;
+        padding: 8px;
+        border-radius: 4px;
+       
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    #spacingSlider {
+        width: 150px;
+    }
+    #showPathControl {
+       
+        background-color: white;
+        padding: 8px;
+       
+        
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    #simulateButton {
+       
+        padding: 8px 16px;
+        background-color: white;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        cursor: pointer;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    #simulateButton:hover {
+        background-color: #f0f0f0;
+    }
+    #speedControl {
+      
+        background-color: white;
+        padding: 8px;
+        border-radius: 4px;
+       
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    #speedSlider {
+        width: 150px;
+    }
+    #pointPickerControl {
+       
+        background-color: white;
+        padding: 8px;
+        border-radius: 4px;
+       
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    #pointPickerControl button {
+        padding: 8px 16px;
+        background-color: white;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    #pointPickerControl button:hover {
+        background-color: #f0f0f0;
+    }
+    #pointPickerControl button.active {
+        background-color: #e6f3ff;
+        border-color: #1890ff;
+    }
+    #pickerStatus {
+        color: #666;
+        font-size: 14px;
+    }
+    #geojsonInput {
+       
+        background-color: white;
+        padding: 8px;
+        border-radius: 4px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        width: 300px;
+    }
+    #geojsonTextarea {
+        width: 100%;
+        height: 100px;
+        resize: vertical;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 8px;
+        font-family: monospace;
+    }
+    #applyGeojson {
+        padding: 8px 16px;
+        background-color: white;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    #applyGeojson:hover {
+        background-color: #f0f0f0;
+    }
+
+    #container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 0;
+    }
+    #info {
+       
+        background: rgba(255,255,255,0.95);
+        border-radius: 8px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+        font-family: "Microsoft YaHei", sans-serif;
+        z-index: 1000;
+    }
+    .panel-section {
+        padding: 15px;
+        border-bottom: 1px solid #eee;
+    }
+    .panel-section:last-child {
+        border-bottom: none;
+    }
+    .panel-title {
+        font-size: 16px;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+    }
+    .panel-title i {
+        margin-right: 8px;
+        color: #0091ff;
+    }
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 8px 0;
+        font-size: 14px;
+        color: #666;
+    }
+    .info-value {
+        color: #0091ff;
+        font-weight: 500;
+    }
+    .control-group {
+        margin: 10px 0;
+    }
+    .control-group button {
+        padding: 8px 15px;
+        margin: 5px;
+        border: none;
+        background: #0091ff;
+        color: white;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    .control-group button:hover {
+        background: #007acc;
+    }
+    .control-group button.active {
+        background: #007acc;
+    }
+    .slider-container {
+        margin: 10px 0;
+    }
+    .slider-container label {
+        display: block;
+        margin-bottom: 5px;
+        color: #666;
+    }
+    input[type="range"] {
+        width: 100%;
+        margin: 8px 0;
+    }
+    .checkbox-container {
+        display: flex;
+        align-items: center;
+        margin: 10px 0;
+    }
+    .checkbox-container input[type="checkbox"] {
+        margin-right: 8px;
+    }
+    
+    #simulateButton {
+       
+        background: #00c853;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    #simulateButton:hover {
+        background: #00a844;
+    }
+    #mapTypeControl {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(255,255,255,0.95);
+        padding: 5px;
+        border-radius: 4px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        z-index: 100;
+    }
+    #mapTypeControl button {
+        padding: 8px 16px;
+        margin: 0 5px;
+        background-color: white;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    #mapTypeControl button.active {
+        background-color: #e6f3ff;
+        border-color: #1890ff;
+        color: #1890ff;
+    }
+    #mapTypeControl button:hover {
+        background-color: #f0f0f0;
+    }
+
+    /* 左侧面板样式 */
+    #leftPanel {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        width: 320px;
+        max-height: calc(100vh - 40px);
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+        font-size: 13px;
+        display: flex;
+        flex-direction: column;
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.8);
+        overflow-y: auto;
+    }
+
+    #leftPanel .panel-section {
+        padding: 16px;
+    }
+
+    #leftPanel .panel-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, 
+            rgba(24, 144, 255, 0.1) 0%,
+            rgba(24, 144, 255, 0.05) 100%);
+    }
+
+    #leftPanel .panel-section:first-child::before {
+        display: none;
+    }
+
+    #leftPanel .panel-title {
+        color: #1a1a1a;
+        font-weight: 600;
+        margin-bottom: 20px;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        letter-spacing: 0.5px;
+        position: relative;
+    }
+
+    #leftPanel .panel-title::before {
+        content: '';
+        width: 4px;
+        height: 18px;
+        background: linear-gradient(180deg, #1890ff 0%, #40a9ff 100%);
+        margin-right: 12px;
+        border-radius: 2px;
+        transition: all 0.3s ease;
+    }
+
+    #leftPanel .panel-section:hover .panel-title::before {
+        background: #40a9ff;
+        transform: scaleY(1.1);
+    }
+
+    #geojsonTextarea {
+        width: 100%;
+        height: 80px;
+        padding: 16px;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 12px;
+        resize: none;
+        font-size: 13px;
+        font-family: 'JetBrains Mono', 'Monaco', monospace;
+        box-sizing: border-box;
+        margin-bottom: 16px;
+        background: rgba(247, 248, 250, 0.6);
+        transition: all 0.3s ease;
+        line-height: 1.5;
+    }
+
+    #geojsonTextarea:focus {
+        border-color: #40a9ff;
+        background: #fff;
+        box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.1);
+        outline: none;
+    }
+
+    #leftPanel button {
+        height: 32px;
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.8);
+        cursor: pointer;
+        padding: 0 16px;
+        font-size: 13px;
+        color: #666;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        margin-bottom: 8px;
+        font-weight: 400;
+        letter-spacing: 0.3px;
+        backdrop-filter: blur(8px);
+    }
+
+    #leftPanel button:hover {
+        background: rgba(255, 255, 255, 0.95);
+        border-color: rgba(24, 144, 255, 0.3);
+        color: #1890ff;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(24, 144, 255, 0.1);
+    }
+
+    #leftPanel button.active {
+        background: #e6f7ff;
+        border-color: #1890ff;
+        color: #1890ff;
+        font-weight: 600;
+    }
+
+    #spacingControl, #speedControl {
+        background: rgba(247, 248, 250, 0.6);
+        padding: 12px;
+        border-radius: 12px;
+        margin: 8px 0;
+        border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    #spacingControl span, #speedControl span {
+        color: #666;
+        font-size: 13px;
+        font-weight: 500;
+    }
+
+    #spacingValue, #speedValue {
+        color: #1890ff;
+        font-weight: 600;
+        min-width: 45px;
+        display: inline-block;
+        text-align: center;
+        background: rgba(24, 144, 255, 0.06);
+        padding: 2px 6px;
+        border-radius: 4px;
+    }
+
+    .coord-display {
+        font-size: 13px;
+        color: #666;
+        margin: 6px 0;
+        padding: 8px 12px;
+        background: rgba(247, 248, 250, 0.6);
+        border-radius: 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .coord-display span:first-child {
+        color: #666;
+        font-weight: 500;
+    }
+
+    .coord-display span:last-child {
+        color: #1890ff;
+        font-family: 'JetBrains Mono', 'Monaco', monospace;
+        font-size: 13px;
+        font-weight: 500;
+        background: rgba(24, 144, 255, 0.06);
+        padding: 4px 8px;
+        border-radius: 6px;
+    }
+
+    #pickerStatus {
+        font-size: 13px;
+        color: #666;
+        text-align: center;
+       
+        padding: 8px 0;
+        transition: all 0.3s ease;
+        background: rgba(24, 144, 255, 0.06);
+        border-radius: 8px;
+       
+    }
+
+    /* 优化滑块样式 */
+    input[type="range"] {
+        -webkit-appearance: none;
+        width: 100%;
+        height: 4px;
+        background: #e1e1e1;
+        border-radius: 2px;
+        outline: none;
+        margin: 16px 0 8px 0;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 20px;
+        height: 20px;
+        background: linear-gradient(180deg, #fff 0%, #f7f7f7 100%);
+        border: 2px solid #1890ff;
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: all 0.2s ease;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+        transform: scale(1.15);
+        box-shadow: 0 2px 8px rgba(24, 144, 255, 0.2);
+    }
+
+    /* 优化复选框容器 */
+    #showPathControl {
+        display: flex;
+        align-items: center;
+        padding: 12px;
+        background: rgba(247, 248, 250, 0.6);
+        border-radius: 12px;
+        margin: 8px 0;
+        border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    #showPathControl label {
+        margin-left: 12px;
+        color: #333;
+        font-size: 14px;
+        font-weight: 500;
+        user-select: none;
+    }
+
+    /* 自定义复选框样式 */
+    #showPathControl input[type="checkbox"] {
+        -webkit-appearance: none;
+        width: 20px;
+        height: 20px;
+        border: 2px solid rgba(0, 0, 0, 0.15);
+        border-radius: 6px;
+        outline: none;
+        cursor: pointer;
+        position: relative;
+        transition: all 0.2s ease;
+        background: #fff;
+    }
+
+    #showPathControl input[type="checkbox"]:checked {
+        background: #1890ff;
+        border-color: #1890ff;
+    }
+
+    #showPathControl input[type="checkbox"]:checked::after {
+        content: '✓';
+        position: absolute;
+        color: white;
+        font-size: 14px;
+        font-weight: bold;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    /* 右下角信息面板样式 */
+    #rightBottomPanel {
+        position: absolute;
+        bottom: 20px;
+        right: 10px;
+        width: 280px;
+        background: rgba(255,255,255,0.95);
+        border-radius: 8px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+        z-index: 1000;
+    }
+
+    /* 滑块样式 */
+    input[type="range"] {
+        width: calc(100% - 80px);
+    }
+
+    #spacingControl, #directionControl, #showPathControl {
+        margin: 10px 0;
+    }
+
+    .panel-section {
+        padding: 12px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .panel-section:last-child {
+        border-bottom: none;
+    }
+
+    .panel-title {
+        color: #333;
+        font-weight: 500;
+        margin-bottom: 12px;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+    }
+
+    .panel-title::before {
+        content: '';
+        width: 3px;
+        height: 13px;
+        background: #1890ff;
+        margin-right: 8px;
+        border-radius: 1px;
+    }
+
+    /* GeoJSON输入区域样式 */
+    #geojsonInput {
+        margin-bottom: 8px;
+    }
+
+    #geojsonInput .button-group {
+        display: flex;
+        gap: 8px;
+    }
+
+    #geojsonInput button {
+        flex: 1;
+        height: 28px;
+        border: 1px solid #d9d9d9;
+        border-radius: 2px;
+        background: #fff;
+        cursor: pointer;
+        padding: 0;
+        font-size: 12px;
+    }
+
+    /* 起降点设置样式 */
+    #pointPickerControl {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    #pointPickerControl button {
+        height: 32px;
+        border: 1px solid #d9d9d9;
+        border-radius: 2px;
+        background: #fff;
+        cursor: pointer;
+        padding: 0;
+        font-size: 13px;
+    }
+
+    #pickerStatus {
+        font-size: 12px;
+        color: #666;
+        text-align: center;
+        min-height: 18px;
+    }
+
+    /* 航线参数设置样式 */
+    #spacingControl {
+        display: flex;
+        align-items: center;
+        margin-bottom: 12px;
+        gap: 8px;
+    }
+
+    #spacingSlider {
+        flex: 1;
+    }
+
+    #spacingValue {
+        min-width: 36px;
+        text-align: right;
+        color: #1890ff;
+    }
+
+    #directionControl {
+        margin: 12px 0;
+    }
+
+    #directionButton {
+        width: 100%;
+        height: 32px;
+        border: 1px solid #d9d9d9;
+        border-radius: 2px;
+        background: #fff;
+        cursor: pointer;
+        margin-bottom: 12px;
+        font-size: 13px;
+    }
+
+    #showPathControl {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    #showPathControl input[type="checkbox"] {
+        margin-right: 8px;
+    }
+
+    /* 通用按钮悬停效果 */
+    button:hover {
+        border-color: #40a9ff;
+        color: #40a9ff;
+    }
+
+    button.active {
+        background: #e6f7ff;
+        border-color: #1890ff;
+        color: #1890ff;
+    }
+
+    /* 复选框样式优化 */
+    input[type="checkbox"] {
+        margin: 0;
+        width: 14px;
+        height: 14px;
+    }
+
+    /* 导出按钮特殊样式 */
+    #exportGeojson {
+        height: 44px !important;
+        background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%) !important;
+        color: white !important;
+        border: none !important;
+        font-weight: 600 !important;
+        font-size: 15px !important;
+        letter-spacing: 1px !important;
+        border-radius: 12px !important;
+        margin-top: 20px !important;
+        box-shadow: 0 4px 12px rgba(24, 144, 255, 0.15) !important;
+    }
+
+    #exportGeojson:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 16px rgba(24, 144, 255, 0.25) !important;
+        background: linear-gradient(135deg, #40a9ff 0%, #1890ff 100%) !important;
+    }
+
+    /* 模拟飞行按钮样式调整 */
+    #simulateButton {
+        background: rgba(0, 200, 83, 0.1) !important;
+        color: #00c853 !important;
+        border: 1px solid rgba(0, 200, 83, 0.2) !important;
+        font-weight: 500 !important;
+    }
+
+    #simulateButton:hover {
+        background: rgba(0, 200, 83, 0.15) !important;
+        border-color: rgba(0, 200, 83, 0.3) !important;
+        box-shadow: 0 2px 8px rgba(0, 200, 83, 0.1) !important;
+    }
+
+    /* 分区样式 */
+    .section-target-area {
+        background: linear-gradient(180deg, 
+            rgba(247, 248, 250, 0.8) 0%,
+            rgba(255, 255, 255, 0.8) 100%);
+    }
+
+    .section-route-settings {
+        background: linear-gradient(180deg, 
+            rgba(247, 248, 250, 0.6) 0%,
+            rgba(255, 255, 255, 0.8) 100%);
+    }
+
+    .section-results {
+        background: linear-gradient(180deg, 
+            rgba(247, 248, 250, 0.4) 0%,
+            rgba(255, 255, 255, 0.8) 100%);
+    }
+
+    /* 控件容器样式优化 */
+    #spacingControl, #speedControl, #showPathControl {
+        background: rgba(255, 255, 255, 0.6);
+        padding: 14px;
+        border-radius: 8px;
+        margin: 8px 0;
+        border: 1px solid rgba(0, 0, 0, 0.04);
+    }
+
+    /* 坐标显示优化 */
+    .coord-display {
+        background: rgba(255, 255, 255, 0.6);
+        border: 1px solid rgba(0, 0, 0, 0.04);
+        padding: 12px;
+        border-radius: 8px;
+        margin: 8px 0;
+    }
+
+    /* 分隔线样式 */
+    .section-divider {
+        height: 12px;
+        background: linear-gradient(90deg,
+            rgba(24, 144, 255, 0.02) 0%,
+            rgba(24, 144, 255, 0.06) 50%,
+            rgba(24, 144, 255, 0.02) 100%);
+        margin: 0;
+    }
+
+
+    #pointPickerControl button {
+        margin-bottom: 8px;
+    }
+
+    .coord-display {
+        font-size: 13px;
+        color: #666;
+        margin: 8px 0 16px 0;
+        padding: 12px 16px;
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .coord-display:last-child {
+        margin-bottom: 0;
+    }
+
+    /* 速度控制区域样式优化 */
+    #speedControl {
+        background: rgba(255, 255, 255, 0.8);
+        padding: 16px;
+        border-radius: 8px;
+        margin: 16px 0;
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    #speedControl input[type="range"] {
+        flex: 1;
+        margin: 0;
+    }
+
+    #speedControl span {
+        color: #666;
+        font-size: 13px;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+
+    #speedValue {
+        color: #1890ff;
+        font-weight: 600;
+        min-width: 24px;
+        display: inline-block;
+        text-align: right;
+        background: rgba(24, 144, 255, 0.06);
+        padding: 2px 6px;
+        border-radius: 4px;
+    }
+
+    /* 间距控制区域样式优化 */
+    #spacingControl {
+        background: rgba(255, 255, 255, 0.8);
+        padding: 16px;
+        border-radius: 8px;
+        margin: 16px 0;
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    #spacingControl input[type="range"] {
+        flex: 1;
+        margin: 0;
+    }
+
+    #spacingControl span {
+        color: #666;
+        font-size: 13px;
+        font-weight: 500;
+        white-space: nowrap;
+    }
+
+    #spacingValue {
+        color: #1890ff;
+        font-weight: 600;
+        min-width: 24px;
+        display: inline-block;
+        text-align: right;
+        background: rgba(24, 144, 255, 0.06);
+        padding: 2px 6px;
+        border-radius: 4px;
+    }
+
+    /* 显示航线控制区样式优化 */
+    #showPathControl {
+        background: rgba(255, 255, 255, 0.8);
+        padding: 16px;
+        border-radius: 8px;
+        margin: 0 0 16px 0;
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    #showPathControl .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    #showPathControl .checkbox-group label {
+        color: #666;
+        font-size: 13px;
+        font-weight: 500;
+        user-select: none;
+        white-space: nowrap;
+    }
+
+    #showPathControl input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        margin: 0;
+        cursor: pointer;
+    }
+
+    /* 分隔线样式优化 */
+    .section-divider {
+        height: 16px;
+        background: linear-gradient(90deg,
+            rgba(24, 144, 255, 0.02) 0%,
+            rgba(24, 144, 255, 0.04) 50%,
+            rgba(24, 144, 255, 0.02) 100%);
+        margin: 0;
+        border: none;
+    }
+
+    #systemTitle {
+    
+       font-size: large;
+       padding: 10px;
+       background-color: #1890ff;
+       color: white;
+    
+       text-align: center;
+       font-weight: bold;
+       
+    }

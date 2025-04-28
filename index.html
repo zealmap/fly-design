@@ -1,0 +1,683 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
+    <link rel="stylesheet" href="style.css" />
+    <title>无人机航线规划</title>
+    <script src="https://webapi.amap.com/maps?v=2.0&key=a0c628a7cbe0de2e9ec5a3f548854b58&plugin=AMap.PolygonEditor"></script>
+</head>
+<body>
+
+<div id="leftPanel">
+    <div id="systemTitle">无人机飞行路线规划</div>
+    
+    <!-- 目标区域设置 -->
+    <div class="panel-section section-target-area">
+        <div class="panel-title">目标区域设置</div>
+        
+        <textarea id="geojsonTextarea" placeholder="输入GeoJSON数据..."></textarea>
+        <button id="applyGeojson">应用</button>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <!-- 路线设置 -->
+    <div class="panel-section section-route-settings">
+        <div class="panel-title">路线设置</div>
+        <div id="pointPickerControl">
+            <button id="startPointPicker">设置起飞点</button>
+            <div class="coord-display">
+                <span>起飞点：</span>
+                <span id="startPointCoord">未设置</span>
+            </div>
+            <button id="endPointPicker">设置降落点</button>
+            <div class="coord-display">
+                <span>降落点：</span>
+                <span id="endPointCoord">未设置</span>
+            </div>
+            <div id="pickerStatus"></div>
+        </div>
+        <div id="spacingControl">
+            <span>间距</span>
+            <input type="range" id="spacingSlider" min="100" max="1000" value="350" step="50">
+            <span><span id="spacingValue">350</span>m</span>
+        </div>
+        <button id="directionButton">切换扫描方向</button>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <!-- 结果显示 -->
+    <div class="panel-section section-results">
+        <div class="panel-title">结果显示</div>
+        <div id="showPathControl">
+            <div class="checkbox-group">
+                <input type="checkbox" id="showPath" checked>
+                <label for="showPath">显示航线</label>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="showWaypoints">
+                <label for="showWaypoints">显示航点</label>
+            </div>
+        </div>
+        
+       
+        <div id="speedControl">
+            速度：<input type="range" id="speedSlider" min="0" max="100" value="10" step="1">
+            <span id="speedValue">10</span>倍
+        </div>
+        <button id="simulateButton">模拟飞行</button>
+        <button id="exportGeojson">导出航线</button>
+    </div>
+</div>
+
+<div id="mapTypeControl">
+    <button id="normalMap" class="active">道路地图</button>
+    <button id="satelliteMap">影像地图</button>
+</div>
+
+<div id="rightBottomPanel">
+    <div class="panel-section">
+        <div class="panel-title">航线信息</div>
+        <div class="info-item">
+            <span>航线点数：</span>
+            <span class="info-value" id="pointCount">0</span>
+        </div>
+        <div class="info-item">
+            <span>航线间距：</span>
+            <span class="info-value"><span id="spacing">350</span>米</span>
+        </div>
+        <div class="info-item">
+            <span>航线总长：</span>
+            <span class="info-value"><span id="totalLength">0</span>米</span>
+        </div>
+    </div>
+</div>
+
+<div id="container"></div>
+
+
+
+<script type="module">
+    import { calculateDistance, calculatePathLength, calculateBoundingBox, findIntersection, findIntersections, generateFlightPath } from './flightPath.js';
+
+    // 全局变量
+    var map = new AMap.Map("container", {
+        center: [116.395577, 39.892257],
+        zoom: 14
+    });
+
+    // 当前扫描方向
+    var currentDirection = 'horizontal';
+
+    // 当前间距
+    var currentSpacing = 350;
+
+    // 存储当前航线数据
+    var currentFlightData = {
+        path: [],
+        waypoints: []
+    };
+
+    // 存储航点标记
+    var waypointLabels = [];
+    
+    // 添加航点标记
+    function addWaypoint(point) {
+        const marker = new AMap.Marker({
+            position: point,
+            map: null,  // 初始不显示
+            icon: new AMap.Icon({
+                size: new AMap.Size(16, 16),
+                image: 'https://webapi.amap.com/theme/v1.3/markers/n/mark_b.png',
+                imageSize: new AMap.Size(16, 16)
+            })
+        });
+        waypointLabels.push(marker);
+        return marker;
+    }
+
+    // 更新航线显示的函数
+    function updateFlightPath() {
+        // 清除旧的航线和标记
+        map.remove([flightLine]);
+        map.getAllOverlays('marker').forEach(marker => {
+            if (marker !== startMarker && marker !== endMarker) {
+                map.remove(marker);
+            }
+        });
+
+        // 生成新的航线
+        const flightResult = generateFlightPath(path.slice(0, -1), currentSpacing, startPoint, currentDirection, endPoint);
+        currentFlightData = flightResult; // 更新当前航线数据
+        const flightPath = flightResult.path;
+        const waypoints = flightResult.waypoints;
+
+        // 如果正在模拟飞行，停止当前模拟
+        if (isSimulating) {
+            simulateFlight();
+        }
+
+        // 计算总长度
+        const totalLength = Math.round(calculatePathLength(flightPath));
+
+        // 更新显示信息
+        document.getElementById('pointCount').textContent = flightPath.length;
+        document.getElementById('spacing').textContent = currentSpacing;
+        document.getElementById('totalLength').textContent = totalLength.toLocaleString();
+
+        // 绘制新的航线
+        flightLine = new AMap.Polyline({
+            path: flightPath,
+            strokeColor: "#0000FF",
+            strokeWeight: 5,
+            strokeStyle: "solid",
+            zIndex: 51,
+            showDir: true,
+            dirColor: '#ff0000'
+        });
+
+        // 如果显示航点选项被勾选，则添加航点序号标记
+        if (document.getElementById('showWaypoints').checked) {
+            waypoints.forEach((point, index) => {
+                new AMap.Marker({
+                    position: point,
+                    offset: new AMap.Pixel(-10, -10),
+                    content: `<div style="background-color: #fff; padding: 3px 8px; border: 2px solid #0000FF; border-radius: 50%; color: #0000FF; font-weight: bold;">${index + 1}</div>`,
+                    zIndex: 52
+                }).setMap(map);
+            });
+        }
+
+        map.add([flightLine]);
+    }
+
+    // 切换航点显示状态
+    function toggleWaypoints(show) {
+        // 移除所有非起降点的标记
+        map.getAllOverlays('marker').forEach(marker => {
+            if (marker !== startMarker && marker !== endMarker) {
+                map.remove(marker);
+            }
+        });
+
+        // 如果需要显示航点，重新添加航点序号标记
+        if (show && currentFlightData && currentFlightData.waypoints) {
+            currentFlightData.waypoints.forEach((point, index) => {
+                new AMap.Marker({
+                    position: point,
+                    offset: new AMap.Pixel(-10, -10),
+                    content: `<div style="background-color: #fff; padding: 3px 8px; border: 2px solid #0000FF; border-radius: 50%; color: #0000FF; font-weight: bold;">${index + 1}</div>`,
+                    zIndex: 52
+                }).setMap(map);
+            });
+        }
+    }
+
+    // 初始化事件监听
+    document.getElementById('showWaypoints').addEventListener('change', function(e) {
+        toggleWaypoints(e.target.checked);
+    });
+
+    // 添加按钮点击事件
+    directionButton.onclick = function() {
+        currentDirection = currentDirection === 'horizontal' ? 'vertical' : 'horizontal';
+        directionButton.innerHTML = `切换为${currentDirection === 'horizontal' ? '垂直' : '水平'}扫描`;
+        updateFlightPath();
+    };
+
+    // 添加滑动条事件
+    document.getElementById('spacingSlider').addEventListener('input', function(e) {
+        currentSpacing = parseInt(e.target.value);
+        document.getElementById('spacingValue').textContent = currentSpacing;
+        updateFlightPath();
+    });
+
+    // 默认多边形路径
+    var defaultPath = [
+        [116.362209, 39.887487],
+        [116.422897, 39.878002],
+        [116.392105, 39.90651],
+        [116.372105, 39.91751],
+        [116.362105, 39.93751],
+        [116.362209, 39.887487]  // 闭合多边形
+    ];
+
+    var path = [...defaultPath];
+
+    // 在页面加载时显示默认GeoJSON
+    document.getElementById('geojsonTextarea').value = JSON.stringify({
+        "type": "Feature",
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [defaultPath]
+        }
+    }, null, 2);
+
+    var polygon = new AMap.Polygon({
+        path: path,
+        strokeColor: "#000000",
+        strokeWeight: 2,
+        strokeOpacity: 0.8,
+        fillColor: '#3366FF',
+        fillOpacity: 0.3,
+        zIndex: 50,
+    });
+
+    // 初始化起降点和标记
+    let startPoint = [116.352209, 39.867487];
+    let endPoint = null;
+    let isPickingStart = false;
+    let isPickingEnd = false;
+    let endMarker = null;
+    let startMarker = null;
+
+    // 创建标记的通用函数
+    function createMarker(position, title, isStart) {
+        const marker = new AMap.Marker({
+            map: map,  // 直接设置地图对象
+            position: position,
+            icon: new AMap.Icon({
+                size: new AMap.Size(25, 34),
+                image: 'https://a.amap.com/jsapi_demos/static/demo-center/icons/poi-marker-red.png',
+                imageSize: new AMap.Size(25, 34)
+            }),
+            offset: new AMap.Pixel(-13, -30),
+            title: title,
+            label: {
+                content: `<div style="padding: 5px 10px; background-color: #fff; border: 2px solid #f00; border-radius: 5px; box-shadow: 0 2px 6px rgba(0,0,0,0.3); font-size: 14px; font-weight: bold; color: #f00;">${title}</div>`,
+                direction: 'right',
+                offset: new AMap.Pixel(20, 0)
+            },
+            zIndex: 110,
+            visible: true
+        });
+        return marker;
+    }
+
+    // 更新坐标显示
+    function updateCoordinateDisplay() {
+        const startCoordElem = document.getElementById('startPointCoord');
+        const endCoordElem = document.getElementById('endPointCoord');
+        
+        if (startPoint) {
+            startCoordElem.textContent = `${startPoint[0].toFixed(6)}, ${startPoint[1].toFixed(6)}`;
+        } else {
+            startCoordElem.textContent = '未设置';
+        }
+        
+        if (endPoint) {
+            endCoordElem.textContent = `${endPoint[0].toFixed(6)}, ${endPoint[1].toFixed(6)}`;
+        } else {
+            endCoordElem.textContent = '未设置';
+        }
+    }
+
+    // 添加地图点击事件
+    map.on('click', function(e) {
+        if (isPickingStart || isPickingEnd) {
+            const lnglat = e.lnglat;
+            const coords = [lnglat.getLng(), lnglat.getLat()];
+            
+            if (isPickingStart) {
+                startPoint = coords;
+                if (startMarker) {
+                    startMarker.setMap(null);
+                }
+                startMarker = createMarker(coords, '起飞点', true);
+                isPickingStart = false;
+                document.getElementById('startPointPicker').classList.remove('active');
+                document.getElementById('pickerStatus').textContent = '';
+            } else if (isPickingEnd) {
+                endPoint = coords;
+                if (endMarker) {
+                    endMarker.setMap(null);
+                }
+                endMarker = createMarker(coords, '降落点', false);
+                
+                // 确保标记被添加到地图上
+                if (!endMarker.getMap()) {
+                    endMarker.setMap(map);
+                }
+                
+                isPickingEnd = false;
+                document.getElementById('endPointPicker').classList.remove('active');
+                document.getElementById('pickerStatus').textContent = '';
+            }
+            
+            updateCoordinateDisplay();
+            updateFlightPath();
+        }
+    });
+
+    // 添加起降点设置按钮事件
+    document.getElementById('startPointPicker').addEventListener('click', function() {
+        isPickingStart = !isPickingStart;
+        isPickingEnd = false;
+        this.classList.toggle('active');
+        document.getElementById('endPointPicker').classList.remove('active');
+        document.getElementById('pickerStatus').textContent = isPickingStart ? '请在地图上点击选择起飞点位置' : '';
+    });
+
+    document.getElementById('endPointPicker').addEventListener('click', function() {
+        isPickingEnd = !isPickingEnd;
+        isPickingStart = false;
+        this.classList.toggle('active');
+        document.getElementById('startPointPicker').classList.remove('active');
+        document.getElementById('pickerStatus').textContent = isPickingEnd ? '请在地图上点击选择降落点位置' : '';
+    });
+    
+    // 生成航线（间距设置为350米）
+    const flightResult = generateFlightPath(path.slice(0, -1), currentSpacing, startPoint, currentDirection, endPoint);
+    const flightPath = flightResult.path;
+    const waypoints = flightResult.waypoints;
+
+    // 计算总长度
+    const totalLength = Math.round(calculatePathLength(flightPath));
+
+    // 更新显示信息
+    document.getElementById('pointCount').textContent = flightPath.length;
+    document.getElementById('totalLength').textContent = totalLength.toLocaleString();
+
+    // 绘制航线
+    var flightLine = new AMap.Polyline({
+        path: flightPath,
+        strokeColor: "#0000FF",
+        strokeWeight: 5,
+        strokeStyle: "solid",
+        zIndex: 51,
+        showDir: true,
+        dirColor: '#ff0000'
+    });
+
+    // 初始化起飞点标记
+    startMarker = createMarker(startPoint, '起飞点', true);
+    updateCoordinateDisplay();  // 初始化时更新显示
+
+    map.add([polygon, flightLine]);
+    map.setFitView();
+
+    // 添加模拟飞行功能
+    let droneMarker = null;
+    let animationInterval = null;
+    let currentPathIndex = 0;
+    let isSimulating = false;
+
+    // 创建飞机图标
+    function createDroneMarker(position) {
+        return new AMap.Marker({
+            position: position,
+            content: '<div style="background-color: #FF4444; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 8px rgba(0,0,0,0.5);"></div>',
+            offset: new AMap.Pixel(-13, -13),
+            zIndex: 100
+        });
+    }
+
+    // 计算两点之间的角度
+    function calculateAngle(from, to) {
+        const diffX = to[0] - from[0];
+        const diffY = to[1] - from[1];
+        return Math.atan2(diffY, diffX) * 180 / Math.PI;
+    }
+
+    // 当前速度倍数
+    let currentSpeed = 10;
+
+    // 添加速度滑块事件
+    document.getElementById('speedSlider').addEventListener('input', function(e) {
+        currentSpeed = parseInt(e.target.value);
+        if (currentSpeed === 0) {
+            // 如果速度为0，暂停模拟
+            if (isSimulating) {
+                simulateFlight();
+            }
+        }
+        document.getElementById('speedValue').textContent = currentSpeed;
+        // 如果正在模拟，重新启动以应用新速度
+        if (isSimulating) {
+            clearInterval(animationInterval);
+            startAnimation();
+        }
+    });
+
+    // 修改模拟飞行动画函数
+    function simulateFlight() {
+        if (isSimulating) {
+            // 停止当前模拟
+            clearInterval(animationInterval);
+            if (droneMarker) {
+                droneMarker.setMap(null);
+                droneMarker = null;
+            }
+            document.getElementById('simulateButton').innerHTML = '模拟飞行';
+            isSimulating = false;
+            currentPathIndex = 0;
+            return;
+        }
+
+        if (currentSpeed === 0) {
+            alert('请设置大于0的速度值');
+            return;
+        }
+
+        // 开始新的模拟
+        isSimulating = true;
+        document.getElementById('simulateButton').innerHTML = '停止模拟';
+        currentPathIndex = 0;
+        
+        // 创建飞机标记并设置到起始位置
+        if (!droneMarker) {
+            droneMarker = createDroneMarker(currentFlightData.path[0]);
+            droneMarker.setMap(map);
+        }
+
+        startAnimation();
+    }
+
+    // 修改开始动画函数
+    function startAnimation() {
+        if (currentSpeed === 0) return;
+
+        const BASE_INTERVAL = 50;
+        const ANIMATION_INTERVAL = BASE_INTERVAL / currentSpeed;
+        const STEP_DISTANCE = 10;
+
+        animationInterval = setInterval(() => {
+            if (currentPathIndex >= currentFlightData.path.length - 1) {
+                // 到达终点，停止动画
+                clearInterval(animationInterval);
+                droneMarker.setMap(null);
+                droneMarker = null;
+                document.getElementById('simulateButton').innerHTML = '模拟飞行';
+                isSimulating = false;
+                currentPathIndex = 0;
+                return;
+            }
+
+            // 获取当前路径段的起点和终点
+            const currentPos = currentFlightData.path[currentPathIndex];
+            const nextPos = currentFlightData.path[currentPathIndex + 1];
+            
+            // 计算当前位置到下一个点的距离
+            const currentMarkerPos = [droneMarker.getPosition().getLng(), droneMarker.getPosition().getLat()];
+            const distanceToNext = calculateDistance(currentMarkerPos, nextPos);
+            
+            if (distanceToNext < STEP_DISTANCE) {
+                // 如果距离下一个点很近，直接移动到下一个点并更新索引
+                currentPathIndex++;
+                droneMarker.setPosition(nextPos);
+            } else {
+                // 计算这一步应该移动的比例
+                const ratio = STEP_DISTANCE / distanceToNext;
+                
+                // 计算新位置
+                const newLng = currentMarkerPos[0] + (nextPos[0] - currentMarkerPos[0]) * ratio;
+                const newLat = currentMarkerPos[1] + (nextPos[1] - currentMarkerPos[1]) * ratio;
+                
+                // 更新飞机位置
+                droneMarker.setPosition([newLng, newLat]);
+            }
+        }, ANIMATION_INTERVAL);
+    }
+
+    // 添加模拟按钮点击事件
+    document.getElementById('simulateButton').addEventListener('click', simulateFlight);
+
+    // 添加航线显示切换事件
+    document.getElementById('showPath').addEventListener('change', function(e) {
+        if (e.target.checked) {
+            map.add([flightLine]);
+            // 重新添加航点标记
+            waypoints.forEach((point, index) => {
+                new AMap.Marker({
+                    position: point,
+                    offset: new AMap.Pixel(-10, -10),
+                    content: `<div style="background-color: #fff; padding: 3px 8px; border: 2px solid #0000FF; border-radius: 50%; color: #0000FF; font-weight: bold;">${index + 1}</div>`,
+                    zIndex: 52
+                }).setMap(map);
+            });
+        } else {
+            map.remove([flightLine]);
+            // 移除所有航点标记
+            map.getAllOverlays('marker').forEach(marker => {
+                if (marker !== startMarker) {
+                    map.remove(marker);
+                }
+            });
+        }
+    });
+
+    // 添加GeoJSON应用按钮事件
+    document.getElementById('applyGeojson').addEventListener('click', function() {
+        try {
+            const geojsonData = JSON.parse(document.getElementById('geojsonTextarea').value);
+            
+            // 验证GeoJSON格式
+            if (geojsonData.type !== 'Feature' || 
+                geojsonData.geometry.type !== 'Polygon' || 
+                !Array.isArray(geojsonData.geometry.coordinates) || 
+                !Array.isArray(geojsonData.geometry.coordinates[0])) {
+                throw new Error('无效的GeoJSON格式，请使用Feature类型的Polygon数据');
+            }
+
+            // 更新路径
+            path = geojsonData.geometry.coordinates[0];
+            
+            // 更新多边形
+            polygon.setPath(path);
+            
+            // 更新航线
+            updateFlightPath();
+            
+            // 调整地图视野
+            map.setFitView();
+        } catch (error) {
+            alert('GeoJSON解析错误：' + error.message);
+        }
+    });
+
+    // 添加调试信息
+    console.log("Polygon path:", path);
+    console.log("Flight path:", flightPath);
+    console.log("Waypoints:", waypoints);
+
+    // 初始化当前航线数据
+    const initialFlightResult = generateFlightPath(path.slice(0, -1), currentSpacing, startPoint, currentDirection, endPoint);
+    currentFlightData = initialFlightResult;
+
+    // 添加导出GeoJSON功能
+    document.getElementById('exportGeojson').addEventListener('click', function() {
+        // 构建GeoJSON数据
+        const geojsonData = {
+            "type": "FeatureCollection",
+            "features": [
+                {
+                    "type": "Feature",
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates": [path]
+                    },
+                    "properties": {
+                        "name": "扫描区域"
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "geometry": {
+                        "type": "LineString",
+                        "coordinates": currentFlightData.path
+                    },
+                    "properties": {
+                        "name": "航线路径",
+                        "spacing": currentSpacing,
+                        "totalLength": calculatePathLength(currentFlightData.path),
+                        "direction": currentDirection
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": startPoint
+                    },
+                    "properties": {
+                        "name": "起飞点"
+                    }
+                },
+                {
+                    "type": "Feature",
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": endPoint
+                    },
+                    "properties": {
+                        "name": "降落点"
+                    }
+                }
+            ]
+        };
+
+        // 创建Blob对象
+        const blob = new Blob([JSON.stringify(geojsonData, null, 2)], { type: 'application/json' });
+        
+        // 创建下载链接
+        const downloadLink = document.createElement('a');
+        downloadLink.href = URL.createObjectURL(blob);
+        downloadLink.download = 'flight_path.geojson';
+        
+        // 触发下载
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+        
+        // 清理URL对象
+        URL.revokeObjectURL(downloadLink.href);
+    });
+
+    // 添加地图类型切换功能
+    document.getElementById('normalMap').addEventListener('click', function() {
+       if(satleLayer){
+        map.remove([satleLayer]);
+       }
+        this.classList.add('active');
+        document.getElementById('satelliteMap').classList.remove('active');
+    });
+    var satleLayer = null;
+
+    document.getElementById('satelliteMap').addEventListener('click', function() {
+        if(satleLayer){
+            map.remove([satleLayer]);
+        }
+        satleLayer = new AMap.TileLayer.Satellite({
+            zIndex: 10,
+          
+        });
+        map.add([satleLayer]);
+        this.classList.add('active');
+        document.getElementById('normalMap').classList.remove('active');
+    });
+</script>
+</body>
+</html>
