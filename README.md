@@ -15,7 +15,7 @@
 
 ## 在线演示
 
-[访问在线演示](https://apps.zealmap.com/flydesign)
+[访问在线演示](https://open.zealmap.com/app/run?url=https://apps.zealmap.com/flydesign/&title=%E6%97%A0%E4%BA%BA%E6%9C%BA%E9%A3%9E%E8%A1%8C%E8%B7%AF%E7%BA%BF%E8%A7%84%E5%88%92)
 
 ## 使用说明
 
